@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -77,10 +78,7 @@ class GoogleSheets {
 
 
         return flow;
-        //return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
 
-//        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-//        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
 
 
@@ -89,8 +87,6 @@ class GoogleSheets {
 
 public class MainActivity extends AppCompatActivity {
 
-    private static String clientId = "624249149118-7374n1noekncojpsssiofmoptuomh3ut.apps.googleusercontent.com";
-    private static String clientSecret = "osaVcPyR8w51Uqbsp1lcaIr-";
     private static RadioGroup radioGroup[] = new RadioGroup[180];
 
     private static int checkedId[] = new int[180];
@@ -110,13 +106,16 @@ public class MainActivity extends AppCompatActivity {
         ScrollView scroll = new ScrollView(mContext);
         scroll.setBackgroundColor(Color.TRANSPARENT);
         tableLayout = new TableLayout(mContext);
+        tableLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         scroll.addView(tableLayout);
 
         addContentView(scroll, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-
     }
 
+    protected int getPixels(float dps){
+        return (int)(dps * getResources().getDisplayMetrics().density);
+    }
     @Override
     protected void onStart() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -134,18 +133,35 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < 180; i++) {
 
             TableRow row = new TableRow(mContext);
+            row.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+            row.setMinimumHeight(getPixels(50));
             row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            if(i%2==0){
+                row.setBackgroundColor(Color.parseColor("#a0a0a0"));
+            }
+
             TextView tv = new TextView(mContext);
-            tv.setText("Question : " + Integer.toString(i + 1));
+            tv.setGravity(Gravity.CENTER_VERTICAL);
+            tv.setPadding(getPixels(30),0, 0,0);
+
+            tv.setText("#" + Integer.toString(i + 1));
             tv.setTextColor(Color.BLACK);
             row.addView(tv);
 
             radioGroup[i] = new RadioGroup(mContext);
             radioGroup[i].setOrientation(LinearLayout.HORIZONTAL);
+            radioGroup[i].setGravity(Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL);
+            radioGroup[i].setMinimumWidth(row.getMeasuredWidth()-tv.getMeasuredWidth());
+            radioGroup[i].setPadding(getPixels(50),0, 0,0);
 
             for (int j = 0; j < 4; j++) {
 
                 RadioButton rb = new RadioButton(mContext);
+                rb.setTextSize(getPixels(30));
+                rb.setScaleX(1.2f);
+                rb.setScaleY(1.2f);
+                rb.setPadding(0,0,getPixels(30),0);
                 rb.setId(j);
                 radioGroup[i].addView(rb);
             }
@@ -204,7 +220,8 @@ public class MainActivity extends AppCompatActivity {
                     };
 
                     Credential credential = ab.authorize("user");
-
+//                    Credential credential = new Credential.Builder().setT
+//                    credential.setAccessToken("ya29.Glt7BpSCNjRe4hN4NqEIIRGM84f8jiAa3mWoikCEYCqb_c-dy1n9rrn1FTmvG1PT5zv-cqmfbQWygYXGDZuQvwYWvxqzt4CpGxLMfrJuMFfOOLVOqwpyJQSDLxs9");
 
                     System.out.println("here21");
                     Sheets.Builder builder = new Sheets.Builder(HTTP_TRANSPORT, GoogleSheets.JSON_FACTORY, credential);
