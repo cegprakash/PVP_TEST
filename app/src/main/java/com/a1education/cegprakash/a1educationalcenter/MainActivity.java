@@ -45,6 +45,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
+
 class GoogleSheets {
     public static final String APPLICATION_NAME = "Google Sheets API Java Quickstart";
     public static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -86,10 +88,10 @@ class GoogleSheets {
 
 
 public class MainActivity extends AppCompatActivity {
+    private static int questionsCount = 10;
+    private static RadioGroup radioGroup[] = new RadioGroup[questionsCount];
 
-    private static RadioGroup radioGroup[] = new RadioGroup[180];
-
-    private static int checkedId[] = new int[180];
+    private static int checkedId[] = new int[questionsCount];
     TableLayout tableLayout;
 
     private boolean isNetworkConnected() {
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
         tableLayout.removeAllViews();
 
-        for (int i = 0; i < 180; i++) {
+        for (int i = 0; i < questionsCount; i++) {
 
             TableRow row = new TableRow(mContext);
             row.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -190,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 List<List<Object>> data = new ArrayList<>();
-                for (int i = 0; i < 180; i++) {
+                for (int i = 0; i < questionsCount; i++) {
                     int selectedId = radioGroup[i].getCheckedRadioButtonId();
                     List<Object> arr = new ArrayList<Object>();
                     arr.add((Object)Integer.toString(selectedId));
@@ -211,12 +213,20 @@ public class MainActivity extends AppCompatActivity {
                         public Intent browserIntent;
                         protected void onAuthorization(AuthorizationCodeRequestUrl authorizationUrl) {
                             String url = (authorizationUrl.build());
-                            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            //Intent webViewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+
+                            browserIntent = new Intent(mContext, WebViewActivity.class);
+                            browserIntent.putExtra("url", Uri.parse(url));
+
 
                             startActivity(browserIntent);
                         }
 
+                        @Override
+                        protected void finalize() throws Throwable {
+                            super.finalize();
 
+                        }
                     };
 
                     Credential credential = ab.authorize("user");
@@ -271,19 +281,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void save(){
-        for(int i=0;i<180;i++) {
+        for(int i=0;i<questionsCount;i++) {
             checkedId[i] = radioGroup[i].getCheckedRadioButtonId();
         }
     }
 
     private void load(){
-        for(int i=0;i<180;i++){
+        for(int i=0;i<questionsCount;i++){
             radioGroup[i].check(checkedId[i]);
         }
     }
 
     private void reset(){
-        for(int i=0;i<180;i++) {
+        for(int i=0;i<questionsCount;i++) {
             checkedId[i] = -1;
         }
     }
