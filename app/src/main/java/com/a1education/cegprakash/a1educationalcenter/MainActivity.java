@@ -14,6 +14,7 @@ import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -99,8 +100,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void onCreate(Bundle savedInstanceState) {
-        reset();
         super.onCreate(savedInstanceState);
+
+        reset();
         setContentView(R.layout.activity_main);
         Context mContext = getApplicationContext();
         ScrollView scroll = new ScrollView(mContext);
