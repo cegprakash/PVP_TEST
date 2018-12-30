@@ -9,18 +9,18 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/a1logo"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/a1logo_round"
         android:supportsRtl="true"
-        android:label="@string/app_name"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            >
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         </activity>
-        <activity android:name=".StartMenuActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            >
+        <activity
+            android:name=".StartMenuActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
