@@ -46,51 +46,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class GoogleSheets {
-    public static final String APPLICATION_NAME = "Google Sheets API Java Quickstart";
-    public static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-
-    /**
-     * Global instance of the scopes required by this quickstart.
-     * If modifying these scopes, delete your previously saved tokens/ folder.
-     */
-    public static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
-
-    /**
-     * Creates an authorized Credential object.
-     *
-     * @param HTTP_TRANSPORT The network HTTP Transport.
-     * @param resources
-     * @return An authorized Credential object.
-     * @throws IOException If the credentials.json file cannot be found.
-     */
-    public static GoogleAuthorizationCodeFlow getFlow(final HttpTransport HTTP_TRANSPORT, Resources resources, String TOKENS_DIRECTORY_PATH) throws IOException {
-        // Load client secrets.
-        InputStream in = resources.openRawResource(R.raw.credentials);
-
-        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
-
-        // Build flow and trigger user authorization request.
-        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
-                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
-                .setAccessType("online")
-                .build();
-
-
-        return flow;
-
-    }
-
-
-}
 
 
 public class MainActivity extends AppCompatActivity {
+    private static final int questionsCnt = 10;
+    private static RadioGroup radioGroup[] = new RadioGroup[questionsCnt];
+    private static int checkedId[] = new int[questionsCnt];
+    GoogleSheetsHelper googleSheetsHelper;
 
-    private static RadioGroup radioGroup[] = new RadioGroup[180];
-
-    private static int checkedId[] = new int[180];
     TableLayout tableLayout;
 
     private boolean isNetworkConnected() {
@@ -101,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        googleSheetsHelper = new GoogleSheetsHelper(this);
         reset();
         setContentView(R.layout.activity_main);
         Context mContext = getApplicationContext();
@@ -115,28 +78,30 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    protected int getPixels(float dps){
-        return (int)(dps * getResources().getDisplayMetrics().density);
+    protected int getPixels(float dps) {
+        return (int) (dps * getResources().getDisplayMetrics().density);
     }
+
+    private void allowNetworkOnMainThread() {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+    }
+
+
     @Override
     protected void onStart() {
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-
-        StrictMode.setThreadPolicy(policy);
-
-        final String TOKENS_DIRECTORY_PATH = getFilesDir().getAbsolutePath();
-        ;
-
         super.onStart();
+        allowNetworkOnMainThread();
+
         final Context mContext = getApplicationContext();
 
         tableLayout.removeAllViews();
 
-        for (int i = 0; i < 180; i++) {
+        for (int i = 0; i < questionsCnt; i++) {
 
             TableRow row = new TableRow(mContext);
             row.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-            row.setMinimumHeight(getPixels(50));
+            row.setMinimumHeight(getPixels(20));
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
             if(i%2==0){
@@ -182,78 +147,38 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+            if(!isNetworkConnected()){
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                alert.setTitle("No connectivity");
+                alert.setMessage("Check your internet connectivity and try again later.");
+                alert.show();
+                alert.setPositiveButton("Ok", null);
+                return;
+            }
+            List<List<Object>> data = new ArrayList<>();
+            for (int i = 0; i < questionsCnt; i++) {
+                int selectedId = radioGroup[i].getCheckedRadioButtonId();
+                List<Object> arr = new ArrayList<Object>();
+                arr.add((Object)Integer.toString(selectedId));
+                data.add(arr);
+            }
 
-                if(!isNetworkConnected()){
-                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                    alert.setTitle("No connectivity");
-                    alert.setMessage("Check your internet connectivity and try again later.");
-                    alert.show();
-                    alert.setPositiveButton("Ok", null);
-                    return;
-                }
-                List<List<Object>> data = new ArrayList<>();
-                for (int i = 0; i < 180; i++) {
-                    int selectedId = radioGroup[i].getCheckedRadioButtonId();
-                    List<Object> arr = new ArrayList<Object>();
-                    arr.add((Object)Integer.toString(selectedId));
-                    data.add(arr);
-                }
+            try{
+                googleSheetsHelper.submitSolution(data);
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                alert.setTitle("Submitted");
+                alert.setMessage("Your response has been submitted successfully");
+                alert.setPositiveButton("Ok", null);
+                alert.show();
 
-                try{
-
-                    System.out.println("here1");
-                    final HttpTransport HTTP_TRANSPORT = AndroidHttp.newCompatibleTransport();
-                    final String spreadsheetId = "1Z0ZkvwJtmA4F7vrRBsAULZ1RK5Ib159281aUC58zJ9k";
-                    final String range = "Sheet1!A:B";
-                    System.out.println("here2");
-
-                    GoogleAuthorizationCodeFlow flow = GoogleSheets.getFlow(HTTP_TRANSPORT, getResources(), TOKENS_DIRECTORY_PATH);
-
-                    AuthorizationCodeInstalledApp ab = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()){
-                        public Intent browserIntent;
-                        protected void onAuthorization(AuthorizationCodeRequestUrl authorizationUrl) {
-                            String url = (authorizationUrl.build());
-                            browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-
-                            startActivity(browserIntent);
-                        }
-
-
-                    };
-
-                    Credential credential = ab.authorize("user");
-//                    Credential credential = new Credential.Builder().setT
-//                    credential.setAccessToken("ya29.Glt7BpSCNjRe4hN4NqEIIRGM84f8jiAa3mWoikCEYCqb_c-dy1n9rrn1FTmvG1PT5zv-cqmfbQWygYXGDZuQvwYWvxqzt4CpGxLMfrJuMFfOOLVOqwpyJQSDLxs9");
-
-                    System.out.println("here21");
-                    Sheets.Builder builder = new Sheets.Builder(HTTP_TRANSPORT, GoogleSheets.JSON_FACTORY, credential);
-                    System.out.println("here22");
-                    builder.setApplicationName(GoogleSheets.APPLICATION_NAME);
-                    System.out.println("here3");
-
-                    Sheets service = builder.build();
-                    System.out.println("here4");
-                    ValueRange content = new ValueRange();
-                    content.setValues(data);
-                    System.out.println("here5");
-                    service.spreadsheets().values().update(spreadsheetId, range, content).setValueInputOption("USER_ENTERED").execute();
-                    System.out.println("here6");
-                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                    alert.setTitle("Submitted");
-                    alert.setMessage("Your response has been submitted successfully");
-                    alert.setPositiveButton("Ok", null);
-                    alert.show();
-
-                } catch(Exception e){
-                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                    alert.setTitle("Something went wrong. Check your internet connectivity and try again later.");
-                    alert.setMessage(e.toString());
-                    alert.show();
-                    alert.setPositiveButton("Ok", null);
-                    System.out.println(e);
-                }
-
-
+            } catch(Exception e){
+                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                alert.setTitle("Something went wrong. Check your internet connectivity and try again later.");
+                alert.setMessage(e.toString());
+                alert.show();
+                alert.setPositiveButton("Ok", null);
+                System.out.println(e);
+            }
             }
         });
 
@@ -273,19 +198,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void save(){
-        for(int i=0;i<180;i++) {
+        for(int i=0;i<questionsCnt;i++) {
             checkedId[i] = radioGroup[i].getCheckedRadioButtonId();
         }
     }
 
     private void load(){
-        for(int i=0;i<180;i++){
+        for(int i=0;i<questionsCnt;i++){
             radioGroup[i].check(checkedId[i]);
         }
     }
 
     private void reset(){
-        for(int i=0;i<180;i++) {
+        for(int i=0;i<questionsCnt;i++) {
             checkedId[i] = -1;
         }
     }
