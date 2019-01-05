@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
@@ -198,8 +199,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void save(){
+        SQLiteDatabase db = openOrCreateDatabase("A1Education",MODE_PRIVATE,null);
+
         for(int i=0;i<questionsCnt;i++) {
             checkedId[i] = radioGroup[i].getCheckedRadioButtonId();
+
+
         }
     }
 
