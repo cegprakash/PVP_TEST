@@ -69,7 +69,8 @@ public class GoogleSheetsHelper {
 
             protected void onAuthorization(AuthorizationCodeRequestUrl authorizationUrl) {
                 String url = (authorizationUrl.build());
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                Intent browserIntent = new Intent(activity, WebViewActivity.class);
+                browserIntent.putExtra("url", url);
 
                 activity.startActivity(browserIntent);
             }

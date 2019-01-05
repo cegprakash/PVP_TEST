@@ -9,9 +9,11 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -147,41 +149,51 @@ public class MainActivity extends AppCompatActivity {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            if(!isNetworkConnected()){
-                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                alert.setTitle("No connectivity");
-                alert.setMessage("Check your internet connectivity and try again later.");
-                alert.show();
-                alert.setPositiveButton("Ok", null);
-                return;
-            }
-            List<List<Object>> data = new ArrayList<>();
-            for (int i = 0; i < questionsCnt; i++) {
-                int selectedId = radioGroup[i].getCheckedRadioButtonId();
-                List<Object> arr = new ArrayList<Object>();
-                arr.add((Object)Integer.toString(selectedId));
-                data.add(arr);
-            }
+                if (!isNetworkConnected()) {
+                    AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                    alert.setTitle("No connectivity");
+                    alert.setMessage("Check your internet connectivity and try again later.");
+                    alert.show();
+                    alert.setPositiveButton("Ok", null);
+                    return;
+                }
+                final List<List<Object>> data = new ArrayList<>();
+                for (int i = 0; i < questionsCnt; i++) {
+                    int selectedId = radioGroup[i].getCheckedRadioButtonId();
+                    List<Object> arr = new ArrayList<Object>();
+                    arr.add((Object) Integer.toString(selectedId));
+                    data.add(arr);
+                }
+                new AsyncTask<Void, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        try {
+                            googleSheetsHelper.submitSolution(data);
+                        } catch (IOException e) {
+                            Log.e("MainActivity", "Exception when submitting solution ", e);
+                            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                            alert.setTitle("Something went wrong. Check your internet connectivity and try again later.");
+                            alert.setMessage(e.toString());
+                            alert.show();
+                            alert.setPositiveButton("Ok", null);
+                            System.out.println(e);
+                        }
+                        return null;
+                    }
 
-            try{
-                googleSheetsHelper.submitSolution(data);
-                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                alert.setTitle("Submitted");
-                alert.setMessage("Your response has been submitted successfully");
-                alert.setPositiveButton("Ok", null);
-                alert.show();
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+                        alert.setTitle("Submitted");
+                        alert.setMessage("Your response has been submitted successfully");
+                        alert.setPositiveButton("Ok", null);
+                        alert.show();
+                    }
+                }.execute();
 
-            } catch(Exception e){
-                AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-                alert.setTitle("Something went wrong. Check your internet connectivity and try again later.");
-                alert.setMessage(e.toString());
-                alert.show();
-                alert.setPositiveButton("Ok", null);
-                System.out.println(e);
-            }
             }
         });
-
 
     }
 
